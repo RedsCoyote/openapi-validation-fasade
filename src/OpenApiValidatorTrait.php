@@ -30,7 +30,8 @@ trait OpenApiValidatorTrait
         string $requestPath,
         string $requestMethod,
         ResponseInterface $response,
-        string $contentType = 'application/json'
+        // FIXME $contentType из заголовка ответа
+        string $contentType = 'application/vnd.api+json'
     ): void {
         try {
             $parsedSchema = Yaml::parseFile($schemaPath);
@@ -48,25 +49,32 @@ trait OpenApiValidatorTrait
 
         try {
             $validator = new Validator($parsedSchema);
+            //if ($this->statusCode == 204 || $this->statusCode == 202) {
+            //                 return new EmptySchema();
+            //             }
             $result = $validator->validateBasedOnRequest(
                 $requestPath,
                 $requestMethod,
                 $response->getStatusCode(),
+                // FIXME ошибка при пустом теле, т.е. при 204 проявится
                 \json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR),
                 $contentType
             );
 
-            if ($result->hasErrors()) {
-                TestCase::fail(
-                    ''
-                );
-            }
+            TestCase::assertFalse(
+                $result->hasErrors(),
+                \sprintf('Ответ не соответствует спецификации "%s": %s', $schemaPath, $result)
+            );
         } catch (InvalidSchemaException $e) {
+            //FIXME тест
             TestCase::fail(
-                ''
+                \sprintf('Спецификация "%s" не соответствует OpenApi: %s', $schemaPath, $e->getMessage())
             );
         } catch (\JsonException $e) {
-            TestCase::fail();
+            //FIXME тест
+            TestCase::fail(
+                \sprintf("Не удалось разобрать ответ как JSON: %s", $e->getMessage())
+            );
         }
     }
 }

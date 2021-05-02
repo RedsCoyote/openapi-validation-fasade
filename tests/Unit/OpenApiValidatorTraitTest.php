@@ -76,7 +76,7 @@ class OpenApiValidatorTraitTest extends TestCase
     }
 
     /**
-     * Проверяет обработку ошибки, если парсинга схемы не удался.
+     * Проверяет обработку ошибки, если парсинг схемы не удался.
      *
      * @throws \Throwable
      */
@@ -116,6 +116,21 @@ class OpenApiValidatorTraitTest extends TestCase
      */
     private function createResponse(): ResponseInterface
     {
-        return (new Psr17Factory())->createResponse();
+        $psr17Factory = new Psr17Factory();
+        $response = $psr17Factory->createResponse();
+
+        return $response->withBody(
+            $psr17Factory->createStream(
+                \json_encode(
+                    [
+                        'data' => [
+                            'id' => 42,
+                            'type' => 'Resource',
+                            'attributes' => null,
+                        ]
+                    ]
+                )
+            )
+        );
     }
 }
