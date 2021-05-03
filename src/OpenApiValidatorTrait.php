@@ -61,6 +61,7 @@ trait OpenApiValidatorTrait
                 $contentType
             );
 
+            //FIXME Тест на ошибку. Как сделать?
             TestCase::assertFalse(
                 $result->hasErrors(),
                 \sprintf('Ответ не соответствует спецификации "%s": %s', $schemaPath, $result)
