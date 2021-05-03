@@ -61,18 +61,15 @@ trait OpenApiValidatorTrait
                 $contentType
             );
 
-            //FIXME Тест на ошибку. Как сделать?
             TestCase::assertFalse(
                 $result->hasErrors(),
                 \sprintf('Ответ не соответствует спецификации "%s": %s', $schemaPath, $result)
             );
         } catch (InvalidSchemaException $e) {
-            //FIXME тест
             TestCase::fail(
                 \sprintf('Спецификация "%s" не соответствует OpenApi: %s', $schemaPath, $e->getMessage())
             );
         } catch (\JsonException $e) {
-            //FIXME тест
             TestCase::fail(
                 \sprintf("Не удалось разобрать ответ как JSON: %s", $e->getMessage())
             );
