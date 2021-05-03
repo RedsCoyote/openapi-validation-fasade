@@ -67,3 +67,11 @@ paths:
                           type: string
                         message:
                           type: string
+  /foo:
+    post:
+      operationId: createResource
+      responses:
+        202:
+          description: OK
+        204:
+          description: OK

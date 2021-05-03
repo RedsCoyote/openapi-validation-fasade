@@ -127,7 +127,7 @@ class OpenApiValidatorTraitTest extends TestCase
             self::INVALID_SCHEMA_PATH,
             '/foo/42/bar?baz=24',
             'PUT',
-            $this->createResponse(null)
+            $this->createResponse([])
         );
     }
 
@@ -151,6 +151,28 @@ class OpenApiValidatorTraitTest extends TestCase
                     ]
                 ]
             )
+        );
+    }
+
+    /**
+     * Проверяет обработку ответов без тела.
+     *
+     * @throws \Throwable
+     */
+    public function testEmptyBodyResponse(): void
+    {
+        $this->validatorTrait->validateResponseAgainstScheme(
+            self::SCHEMA_PATH,
+            '/foo',
+            'POST',
+            $this->createResponse(null, 202)
+        );
+
+        $this->validatorTrait->validateResponseAgainstScheme(
+            self::SCHEMA_PATH,
+            '/foo',
+            'POST',
+            $this->createResponse(null, 204)
         );
     }
 
@@ -189,16 +211,17 @@ class OpenApiValidatorTraitTest extends TestCase
     /**
      * Возвращает тестовый ответ метода.
      *
-     * @param mixed $body Тело ответа.
+     * @param mixed $body       Тело ответа.
+     * @param int   $statusCode Код состояния ответа.
      *
      * @return ResponseInterface
      *
      * @throws \Throwable
      */
-    private function createResponse($body): ResponseInterface
+    private function createResponse($body, int $statusCode = 200): ResponseInterface
     {
         $psr17Factory = new Psr17Factory();
-        $response = $psr17Factory->createResponse();
+        $response = $psr17Factory->createResponse($statusCode);
 
         if ($body === null) {
             return $response;

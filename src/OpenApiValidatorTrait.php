@@ -48,16 +48,25 @@ trait OpenApiValidatorTrait
         }
 
         try {
+            $statusCode = $response->getStatusCode();
+            if ($statusCode == 204 || $statusCode == 202) {
+                //FIXME Ответ с телом будет воспринят как пустой, что не правильно.
+                $parsedBody = [];
+            } else {
+                $parsedBody = \json_decode(
+                    (string) $response->getBody(),
+                    true,
+                    512,
+                    JSON_THROW_ON_ERROR
+                );
+            }
+
             $validator = new Validator($parsedSchema);
-            //if ($this->statusCode == 204 || $this->statusCode == 202) {
-            //                 return new EmptySchema();
-            //             }
             $result = $validator->validateBasedOnRequest(
                 $requestPath,
                 $requestMethod,
                 $response->getStatusCode(),
-                // FIXME ошибка при пустом теле, т.е. при 204 проявится
-                \json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR),
+                $parsedBody,
                 $contentType
             );
 
@@ -67,7 +76,11 @@ trait OpenApiValidatorTrait
             );
         } catch (InvalidSchemaException $e) {
             TestCase::fail(
-                \sprintf('Спецификация "%s" не соответствует OpenApi: %s', $schemaPath, $e->getMessage())
+                \sprintf(
+                    'Спецификация "%s" не соответствует OpenApi: %s',
+                    $schemaPath,
+                    $e->getMessage()
+                )
             );
         } catch (\JsonException $e) {
             TestCase::fail(
