@@ -51,7 +51,41 @@ class OpenApiValidatorTraitTest extends TestCase
             self::SCHEMA_PATH,
             '/foo/42/bar?baz=24',
             'PUT',
-            $this->createResponse()
+            $this->createResponse(
+                [
+                    'data' => [
+                        'id' => 42,
+                        'type' => 'Resource',
+                        'attributes' => null,
+                    ]
+                ]
+            )
+        );
+    }
+
+    /**
+     * Проверяет вариант ответа, не соответствующего спецификации.
+     *
+     * @throws \Throwable
+     */
+    public function testInvalidResponse(): void
+    {
+        $this->expectException(AssertionFailedError::class);
+        $this->expectExceptionMessageMatches('~Ответ не соответствует спецификации .*~');
+        $this->expectExceptionCode(0);
+
+        $this->validatorTrait->validateResponseAgainstScheme(
+            self::SCHEMA_PATH,
+            '/foo/42/bar?baz=24',
+            'PUT',
+            $this->createResponse(
+                [
+                    'data' => [
+                        'id' => 42,
+                        'type' => 'Resource',
+                    ]
+                ]
+            )
         );
     }
 
@@ -71,7 +105,7 @@ class OpenApiValidatorTraitTest extends TestCase
             self::EMPTY_FILE_PATH,
             '/foo/42/bar?baz=24',
             'PUT',
-            $this->createResponse()
+            $this->createResponse(null)
         );
     }
 
@@ -91,7 +125,7 @@ class OpenApiValidatorTraitTest extends TestCase
             self::INVALID_FILE_PATH,
             '/foo/42/bar?baz=24',
             'PUT',
-            $this->createResponse()
+            $this->createResponse(null)
         );
     }
 
@@ -110,27 +144,21 @@ class OpenApiValidatorTraitTest extends TestCase
     /**
      * Возвращает тестовый ответ метода.
      *
+     * @param array<string, mixed>|null $body Тело ответа.
+     *
      * @return ResponseInterface
      *
      * @throws \Throwable
      */
-    private function createResponse(): ResponseInterface
+    private function createResponse(?array $body): ResponseInterface
     {
         $psr17Factory = new Psr17Factory();
         $response = $psr17Factory->createResponse();
 
-        return $response->withBody(
-            $psr17Factory->createStream(
-                \json_encode(
-                    [
-                        'data' => [
-                            'id' => 42,
-                            'type' => 'Resource',
-                            'attributes' => null,
-                        ]
-                    ]
-                )
-            )
-        );
+        if ($body === null) {
+            return $response;
+        }
+
+        return $response->withBody($psr17Factory->createStream(\json_encode($body)));
     }
 }
