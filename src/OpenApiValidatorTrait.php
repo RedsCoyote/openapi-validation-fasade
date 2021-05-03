@@ -76,7 +76,7 @@ trait OpenApiValidatorTrait
     /**
      * Возвращает тип содержимого ответа.
      *
-     * @param ResponseInterface $response
+     * @param ResponseInterface $response Ответ проверяемого метода API.
      *
      * @return string
      */
@@ -97,7 +97,7 @@ trait OpenApiValidatorTrait
     /**
      * Возвращает тело ответа в виде ассоциативного массива.
      *
-     * @param ResponseInterface $response
+     * @param ResponseInterface $response Ответ проверяемого метода API.
      *
      * @return array<string, mixed>
      * @throws \JsonException
