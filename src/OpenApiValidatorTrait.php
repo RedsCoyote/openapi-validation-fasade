@@ -21,7 +21,6 @@ trait OpenApiValidatorTrait
      * @param string            $requestPath   Путь запроса.
      * @param string            $requestMethod Метод запроса.
      * @param ResponseInterface $response      Проверяемый ответ.
-     * @param string            $contentType   Тип содержимого ответа.
      *
      * @throws AssertionFailedError
      */
@@ -29,9 +28,7 @@ trait OpenApiValidatorTrait
         string $schemaPath,
         string $requestPath,
         string $requestMethod,
-        ResponseInterface $response,
-        // FIXME $contentType из заголовка ответа
-        string $contentType = 'application/vnd.api+json'
+        ResponseInterface $response
     ): void {
         try {
             $parsedSchema = Yaml::parseFile($schemaPath);
@@ -48,25 +45,13 @@ trait OpenApiValidatorTrait
         }
 
         try {
-            $body = (string) $response->getBody();
-            if ($body === '') {
-                $parsedBody = [];
-            } else {
-                $parsedBody = \json_decode(
-                    $body,
-                    true,
-                    512,
-                    JSON_THROW_ON_ERROR
-                );
-            }
-
             $validator = new Validator($parsedSchema);
             $result = $validator->validateBasedOnRequest(
                 $requestPath,
                 $requestMethod,
                 $response->getStatusCode(),
-                $parsedBody,
-                $contentType
+                $this->getParsedBody($response),
+                $this->getContentType($response)
             );
 
             TestCase::assertFalse(
@@ -86,5 +71,51 @@ trait OpenApiValidatorTrait
                 \sprintf("Не удалось разобрать ответ как JSON: %s", $e->getMessage())
             );
         }
+    }
+
+    /**
+     * Возвращает тип содержимого ответа.
+     *
+     * @param ResponseInterface $response
+     *
+     * @return string
+     */
+    private function getContentType(ResponseInterface $response): string
+    {
+        $contentType = $response->getHeaderLine('Content-Type');
+        if ($contentType !== '') {
+            $types = \explode(';', $contentType);
+
+            return \reset($types);
+        }
+
+        // Намеренно выставляем невозможный тип, отсекаем ответы, у которых он по какой-то причине
+        // отсутствует.
+        return 'my/wrong.type';
+    }
+
+    /**
+     * Возвращает тело ответа в виде ассоциативного массива.
+     *
+     * @param ResponseInterface $response
+     *
+     * @return array<string, mixed>
+     * @throws \JsonException
+     */
+    private function getParsedBody(ResponseInterface $response): array
+    {
+        $body = (string) $response->getBody();
+        if ($body === '') {
+            $parsedBody = [];
+        } else {
+            $parsedBody = \json_decode(
+                $body,
+                true,
+                512,
+                JSON_THROW_ON_ERROR
+            );
+        }
+
+        return $parsedBody;
     }
 }

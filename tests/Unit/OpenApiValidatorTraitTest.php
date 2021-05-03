@@ -101,7 +101,9 @@ class OpenApiValidatorTraitTest extends TestCase
                         'id' => 42,
                         'type' => 'Resource',
                     ]
-                ]
+                ],
+                200,
+                'application/vnd.api+json'
             )
         );
     }
@@ -164,7 +166,9 @@ class OpenApiValidatorTraitTest extends TestCase
                         'type' => 'Resource',
                         'attributes' => null,
                     ]
-                ]
+                ],
+                200,
+                'application/vnd.api+json'
             )
         );
     }
@@ -204,17 +208,25 @@ class OpenApiValidatorTraitTest extends TestCase
     /**
      * Возвращает тестовый ответ метода.
      *
-     * @param mixed $body       Тело ответа.
-     * @param int   $statusCode Код состояния ответа.
+     * @param mixed       $body        Тело ответа.
+     * @param int         $statusCode  Код состояния ответа.
+     * @param string|null $contentType Тип содержимого ответа.
      *
      * @return ResponseInterface
      *
      * @throws \Throwable
      */
-    private function createResponse($body, int $statusCode = 200): ResponseInterface
-    {
+    private function createResponse(
+        $body,
+        int $statusCode = 200,
+        ?string $contentType = null
+    ): ResponseInterface {
         $psr17Factory = new Psr17Factory();
         $response = $psr17Factory->createResponse($statusCode);
+
+        if (\is_string($contentType)) {
+            $response = $response->withHeader('Content-type', $contentType);
+        }
 
         if ($body === null) {
             return $response;
