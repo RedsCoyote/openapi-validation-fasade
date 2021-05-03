@@ -48,13 +48,12 @@ trait OpenApiValidatorTrait
         }
 
         try {
-            $statusCode = $response->getStatusCode();
-            if ($statusCode == 204 || $statusCode == 202) {
-                //FIXME Ответ с телом будет воспринят как пустой, что не правильно.
+            $body = (string) $response->getBody();
+            if ($body === '') {
                 $parsedBody = [];
             } else {
                 $parsedBody = \json_decode(
-                    (string) $response->getBody(),
+                    $body,
                     true,
                     512,
                     JSON_THROW_ON_ERROR

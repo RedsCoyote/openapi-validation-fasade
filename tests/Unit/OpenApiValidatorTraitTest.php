@@ -46,6 +46,21 @@ class OpenApiValidatorTraitTest extends TestCase
     private $validatorTrait;
 
     /**
+     * Проверяет обработку ответов без тела.
+     *
+     * @throws \Throwable
+     */
+    public function testEmptyBodyResponse(): void
+    {
+        $this->validatorTrait->validateResponseAgainstScheme(
+            self::SCHEMA_PATH,
+            '/foo',
+            'POST',
+            $this->createResponse(null, 204)
+        );
+    }
+
+    /**
      * Проверяет обработку ошибки, если результат парсинга схемы не массив, например, файл пустой.
      *
      * @throws \Throwable
@@ -155,28 +170,6 @@ class OpenApiValidatorTraitTest extends TestCase
     }
 
     /**
-     * Проверяет обработку ответов без тела.
-     *
-     * @throws \Throwable
-     */
-    public function testEmptyBodyResponse(): void
-    {
-        $this->validatorTrait->validateResponseAgainstScheme(
-            self::SCHEMA_PATH,
-            '/foo',
-            'POST',
-            $this->createResponse(null, 202)
-        );
-
-        $this->validatorTrait->validateResponseAgainstScheme(
-            self::SCHEMA_PATH,
-            '/foo',
-            'POST',
-            $this->createResponse(null, 204)
-        );
-    }
-
-    /**
      * Проверяет обработку ошибки, если тело ответа не JSON.
      *
      * @throws \Throwable
@@ -192,7 +185,7 @@ class OpenApiValidatorTraitTest extends TestCase
             self::SCHEMA_PATH,
             '/foo/42/bar?baz=24',
             'PUT',
-            $this->createResponse('')
+            $this->createResponse('bla-bla')
         );
     }
 
