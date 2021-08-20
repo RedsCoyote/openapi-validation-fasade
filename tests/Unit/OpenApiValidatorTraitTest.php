@@ -46,21 +46,6 @@ class OpenApiValidatorTraitTest extends TestCase
     private $validatorTrait;
 
     /**
-     * Проверяет обработку ответов без тела.
-     *
-     * @throws \Throwable
-     */
-    public function testEmptyBodyResponse(): void
-    {
-        $this->validatorTrait->validateResponseAgainstScheme(
-            self::SCHEMA_PATH,
-            '/foo',
-            'POST',
-            $this->createResponse(null, 204)
-        );
-    }
-
-    /**
      * Проверяет обработку ошибки, если результат парсинга схемы не массив, например, файл пустой.
      *
      * @throws \Throwable
@@ -74,7 +59,7 @@ class OpenApiValidatorTraitTest extends TestCase
 
         $this->validatorTrait->validateResponseAgainstScheme(
             self::EMPTY_FILE_PATH,
-            '/foo/42/bar?baz=24',
+            '/foo/{slug}/bar',
             'PUT',
             $this->createResponse(null)
         );
@@ -88,19 +73,19 @@ class OpenApiValidatorTraitTest extends TestCase
     public function testInvalidResponse(): void
     {
         $this->expectException(AssertionFailedError::class);
-        $this->expectExceptionMessageMatches('~Ответ не соответствует спецификации .*~');
+        $this->expectExceptionMessageMatches('~Ответ не соответствует спецификации:.*~');
         $this->expectExceptionCode(0);
 
         $this->validatorTrait->validateResponseAgainstScheme(
             self::SCHEMA_PATH,
-            '/foo/42/bar?baz=24',
+            '/foo/{slug}/bar',
             'PUT',
             $this->createResponse(
                 [
                     'data' => [
                         'id' => 42,
                         'type' => 'Resource',
-                    ]
+                    ],
                 ],
                 200,
                 'application/vnd.api+json'
@@ -122,7 +107,7 @@ class OpenApiValidatorTraitTest extends TestCase
 
         $this->validatorTrait->validateResponseAgainstScheme(
             self::INVALID_FILE_PATH,
-            '/foo/42/bar?baz=24',
+            '/foo/{slug}/bar',
             'PUT',
             $this->createResponse(null)
         );
@@ -137,12 +122,12 @@ class OpenApiValidatorTraitTest extends TestCase
     {
         $this->expectException(AssertionFailedError::class);
         $this->expectExceptionMessageMatches(
-            '~Спецификация ".*" не соответствует OpenApi: Missing operationId~'
+            '~Спецификация ".*" не соответствует OpenApi 3\.~'
         );
 
         $this->validatorTrait->validateResponseAgainstScheme(
             self::INVALID_SCHEMA_PATH,
-            '/foo/42/bar?baz=24',
+            '/foo/{slug}/bar',
             'PUT',
             $this->createResponse([])
         );
@@ -155,20 +140,22 @@ class OpenApiValidatorTraitTest extends TestCase
      */
     public function testValidate(): void
     {
-        $this->validatorTrait->validateResponseAgainstScheme(
-            self::SCHEMA_PATH,
-            '/foo/42/bar?baz=24',
-            'PUT',
-            $this->createResponse(
-                [
-                    'data' => [
-                        'id' => 42,
-                        'type' => 'Resource',
-                        'attributes' => null,
-                    ]
-                ],
-                200,
-                'application/vnd.api+json'
+        self::assertNull(
+            $this->validatorTrait->validateResponseAgainstScheme(
+                self::SCHEMA_PATH,
+                '/foo/{slug}/bar',
+                'PUT',
+                $this->createResponse(
+                    [
+                        'data' => [
+                            'id' => 42,
+                            'type' => 'Resource',
+                            'attributes' => null,
+                        ],
+                    ],
+                    200,
+                    'application/vnd.api+json'
+                )
             )
         );
     }
@@ -182,14 +169,15 @@ class OpenApiValidatorTraitTest extends TestCase
     {
         $this->expectException(AssertionFailedError::class);
         $this->expectExceptionMessage(
-            'Не удалось разобрать ответ как JSON: Syntax error'
+            'Ответ не соответствует спецификации: JSON parsing failed with "Syntax error"' .
+            ' for Response [put /foo/{slug}/bar 200]'
         );
 
         $this->validatorTrait->validateResponseAgainstScheme(
             self::SCHEMA_PATH,
-            '/foo/42/bar?baz=24',
+            '/foo/{slug}/bar',
             'PUT',
-            $this->createResponse('bla-bla')
+            $this->createResponse('bla-bla', 200, 'application/vnd.api+json')
         );
     }
 

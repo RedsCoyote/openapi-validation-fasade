@@ -4,14 +4,21 @@ declare(strict_types=1);
 
 namespace App;
 
-use Mmal\OpenapiValidator\Exception\InvalidSchemaException;
-use Mmal\OpenapiValidator\Validator;
+use League\OpenAPIValidation\PSR7\Exception\ValidationFailed;
+use League\OpenAPIValidation\PSR7\OperationAddress;
+use League\OpenAPIValidation\PSR7\ValidatorBuilder;
 use PHPUnit\Framework\AssertionFailedError;
+use PHPUnit\Framework\ExpectationFailedException;
 use PHPUnit\Framework\TestCase;
+use Psr\Cache\InvalidArgumentException;
 use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\Yaml\Exception\ParseException;
 use Symfony\Component\Yaml\Yaml;
+use function PHPUnit\Framework\assertNotNull;
 
+/**
+ * Примесь для проверки соответствия сообщений спецификации OpenAPI.
+ */
 trait OpenApiValidatorTrait
 {
     /**
@@ -25,97 +32,60 @@ trait OpenApiValidatorTrait
      * @throws AssertionFailedError
      */
     public function validateResponseAgainstScheme(
-        string $schemaPath,
-        string $requestPath,
-        string $requestMethod,
+        string            $schemaPath,
+        string            $requestPath,
+        string            $requestMethod,
         ResponseInterface $response
     ): void {
         try {
-            $parsedSchema = Yaml::parseFile($schemaPath);
+            assertNotNull((new Yaml())->parseFile($schemaPath));
         } catch (ParseException $e) {
             TestCase::fail(
                 \sprintf('Неправильный формат спецификации "%s": %s', $schemaPath, $e->getMessage())
             );
-        }
-
-        if (!\is_array($parsedSchema)) {
+        } catch (\SebastianBergmann\RecursionContext\InvalidArgumentException | ExpectationFailedException $e) {
             TestCase::fail(
                 \sprintf('Файл спецификации "%s" пустой.', $schemaPath)
             );
         }
 
         try {
-            $validator = new Validator($parsedSchema);
-            $result = $validator->validateBasedOnRequest(
-                $requestPath,
-                $requestMethod,
-                $response->getStatusCode(),
-                $this->getParsedBody($response),
-                $this->getContentType($response)
+            $validator = (new ValidatorBuilder())
+                ->fromYamlFile($schemaPath)
+                ->getResponseValidator();
+        } catch (\Throwable $e) {
+            TestCase::fail(
+                \sprintf('Неправильный формат спецификации "%s": %s', $schemaPath, $e->getMessage())
             );
-
-            TestCase::assertFalse(
-                $result->hasErrors(),
-                \sprintf('Ответ не соответствует спецификации "%s": %s', $schemaPath, $result)
-            );
-        } catch (InvalidSchemaException $e) {
+        } catch (InvalidArgumentException $e) {
+            // Это исключение не является наследником \Throwable.
             TestCase::fail(
                 \sprintf(
-                    'Спецификация "%s" не соответствует OpenApi: %s',
+                    'Не удалось инициализировать кеш для спецификации "%s": %s',
                     $schemaPath,
                     $e->getMessage()
                 )
             );
-        } catch (\JsonException $e) {
+        }
+
+        if ($validator->getSchema()->validate() === false) {
             TestCase::fail(
-                \sprintf("Не удалось разобрать ответ как JSON: %s", $e->getMessage())
-            );
-        }
-    }
-
-    /**
-     * Возвращает тип содержимого ответа.
-     *
-     * @param ResponseInterface $response Ответ проверяемого метода API.
-     *
-     * @return string
-     */
-    private function getContentType(ResponseInterface $response): string
-    {
-        $contentType = $response->getHeaderLine('Content-Type');
-        if ($contentType !== '') {
-            $types = \explode(';', $contentType);
-
-            return \reset($types);
-        }
-
-        // Намеренно выставляем невозможный тип, отсекаем ответы, у которых он по какой-то причине
-        // отсутствует.
-        return 'my/wrong.type';
-    }
-
-    /**
-     * Возвращает тело ответа в виде ассоциативного массива.
-     *
-     * @param ResponseInterface $response Ответ проверяемого метода API.
-     *
-     * @return array<string, mixed>
-     * @throws \JsonException
-     */
-    private function getParsedBody(ResponseInterface $response): array
-    {
-        $body = (string) $response->getBody();
-        if ($body === '') {
-            $parsedBody = [];
-        } else {
-            $parsedBody = \json_decode(
-                $body,
-                true,
-                512,
-                JSON_THROW_ON_ERROR
+                \sprintf(
+                    'Спецификация "%s" не соответствует OpenApi 3.',
+                    $schemaPath
+                )
             );
         }
 
-        return $parsedBody;
+        try {
+            $validator->validate(
+                new OperationAddress($requestPath, \strtolower($requestMethod)),
+                $response
+            );
+        } catch (ValidationFailed $e) {
+            TestCase::fail(
+                \sprintf("Ответ не соответствует спецификации: %s", $e->getMessage())
+            );
+        }
     }
 }

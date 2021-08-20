@@ -8,7 +8,7 @@
     "require": {
         "php": ">=7.3",
         "ext-json": "*",
-        "mmal/openapi-validator": "^0.9",
+        "league/openapi-psr7-validator": "^0.16.1",
         "phpunit/phpunit": "^9.2",
         "psr/http-message": "^1.0",
         "symfony/yaml": "^5.2"

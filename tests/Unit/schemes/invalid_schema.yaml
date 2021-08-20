@@ -5,13 +5,10 @@ info:
 servers:
   -
     url: 'https://tst.tst'
-paths:
+pathes:
   /foo/{slug}/bar:
     put:
-      # Отсутствие operationId не является, формально, нарушением спецификации OpenApi, однако, этот
-      # параметр может использоваться сторонними утилитами. В данном случае, его использование требуется
-      # для самого валидатора. Ошибка, возникающая при этом, аналогична явному нарушению спецификации.
-      #      operationId: testOperation
+      operationId: testOperation
       parameters:
         -
           name: slug
