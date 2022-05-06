@@ -68,7 +68,7 @@ trait OpenApiValidatorTrait
             );
         }
 
-        if ($validator->getSchema()->validate() === false) {
+        if (!$validator->getSchema()->validate()) {
             TestCase::fail(
                 \sprintf(
                     'Спецификация "%s" не соответствует OpenApi 3.',

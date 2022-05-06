@@ -202,8 +202,6 @@ class OpenApiValidatorTraitTest extends TestCase
      * @param int         $statusCode  Код состояния ответа.
      * @param string|null $contentType Тип содержимого ответа.
      *
-     * @return ResponseInterface
-     *
      * @throws \Throwable
      */
     private function createResponse(
