@@ -140,7 +140,7 @@ class OpenApiValidatorTraitTest extends TestCase
      */
     public function testValidate(): void
     {
-        self::assertNull(
+        try {
             $this->validatorTrait->validateResponseAgainstScheme(
                 self::SCHEMA_PATH,
                 '/foo/{slug}/bar',
@@ -156,8 +156,10 @@ class OpenApiValidatorTraitTest extends TestCase
                     200,
                     'application/vnd.api+json'
                 )
-            )
-        );
+            );
+        } catch (\Throwable $e) {
+            self::fail($e->getMessage());
+        }
     }
 
     /**
@@ -221,7 +223,7 @@ class OpenApiValidatorTraitTest extends TestCase
         }
 
         if (\is_array($body)) {
-            $body = \json_encode($body);
+            $body = \json_encode($body, JSON_THROW_ON_ERROR);
         }
 
         if (\is_string($body)) {

@@ -38,7 +38,7 @@ trait OpenApiValidatorTrait
         ResponseInterface $response
     ): void {
         try {
-            assertNotNull((new Yaml())->parseFile($schemaPath));
+            assertNotNull(Yaml::parseFile($schemaPath));
         } catch (ParseException $e) {
             TestCase::fail(
                 \sprintf('Неправильный формат спецификации "%s": %s', $schemaPath, $e->getMessage())

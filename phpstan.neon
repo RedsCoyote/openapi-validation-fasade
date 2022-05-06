@@ -1,0 +1,21 @@
+##
+## Настройки статического анализатора PHPStan.
+##
+
+parameters:
+    # Уровень проверки от 0 до 8 (вместо 8 можно указать "max").
+    level: 7
+    # Пути, которые следует проверять.
+    paths:
+        - src
+        - tests
+    ignoreErrors:
+        -
+          path: 'tests/Unit/OpenApiValidatorTraitTest.php'
+          message: '/Property .*OpenApiValidatorTraitTest::\$validatorTrait has invalid type .*OpenApiValidatorTrait\./'
+        -
+          path: 'tests/Unit/OpenApiValidatorTraitTest.php'
+          message: '/Property .*OpenApiValidatorTraitTest::\$validatorTrait \(.*\) does not accept .*MockObject\./'
+        -
+          path: 'tests/Unit/OpenApiValidatorTraitTest.php'
+          message: '/Call to method validateResponseAgainstScheme\(\) on an unknown class .*OpenApiValidatorTrait\./'
