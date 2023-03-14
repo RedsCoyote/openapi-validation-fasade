@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit;
+namespace RedsCoyote\OpenApiValidator\Tests\Unit;
 
-use App\OpenApiValidatorTrait;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use PHPUnit\Framework\AssertionFailedError;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
+use RedsCoyote\OpenApiValidator\OpenApiValidatorTrait;
 
 /**
  * Тест примеси проверки соответствия ответов схеме.
  *
- * @covers \App\OpenApiValidatorTrait
+ * @covers \RedsCoyote\OpenApiValidator\OpenApiValidatorTrait
  */
 class OpenApiValidatorTraitTest extends TestCase
 {

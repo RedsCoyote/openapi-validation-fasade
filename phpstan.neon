@@ -12,10 +12,4 @@ parameters:
     ignoreErrors:
         -
           path: 'tests/Unit/OpenApiValidatorTraitTest.php'
-          message: '/Property .*OpenApiValidatorTraitTest::\$validatorTrait has invalid type .*OpenApiValidatorTrait\./'
-        -
-          path: 'tests/Unit/OpenApiValidatorTraitTest.php'
-          message: '/Property .*OpenApiValidatorTraitTest::\$validatorTrait \(.*\) does not accept .*MockObject\./'
-        -
-          path: 'tests/Unit/OpenApiValidatorTraitTest.php'
-          message: '/Call to method validateResponseAgainstScheme\(\) on an unknown class .*OpenApiValidatorTrait\./'
+          message: '/PHPDoc tag @var for property .*\\OpenApiValidatorTraitTest::\$validatorTrait contains unresolvable type\./'
